@@ -1,3 +1,3 @@
-vala-gen-introspect midgard2 ./
-vapigen --library midgard2 midgard2.gi
-perl -p -i -e  "s/midgard2.h/midgard\/midgard.h/g" midgard2.vapi
+vala-gen-introspect midgard3 ./
+vapigen --library midgard3 midgard3.gi
+perl -p -i -e  "s/midgard3.h/midgard\/midgard.h/g" midgard3.vapi
