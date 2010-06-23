@@ -1,4 +1,4 @@
-/* valac --debug --pkg midgard2 -o midgard-query-select MidgardQuerySelect.vala --vapidir=./ */
+/* valac --debug --pkg midgard3 -o midgard-query-select MidgardQuerySelect.vala --vapidir=../ */
 
 using GLib;
 using Midgard;
@@ -16,49 +16,53 @@ namespace MidgardQueryExample {
 
 		}
 
+		config.loglevel = "debug";
+
 		Midgard.Connection cnc = new Midgard.Connection();
 		if (!cnc.open_config (config))
 			GLib.error ("Not connected to database \n");
 	
 		/* Initialize QueryStorage for given midgard_page class */
-		Midgard.QueryStorage storage = new Midgard.QueryStorage ("midgard_page");
+		Midgard.QueryStorage storage = new Midgard.QueryStorage ("midgard_person");
 		Midgard.QuerySelect select = new Midgard.QuerySelect (cnc, storage);
 
 		/* Add constraints */
 		/* 'metadata.created > "2000-01-01 10:10:10"' */
 		Midgard.QueryProperty prop1 = new Midgard.QueryProperty ("metadata.created", null);
-		Midgard.QueryValue val1 = new Midgard.QueryValue ("2000-01-01 10:10:10");
+		Midgard.QueryValue val1 = Midgard.QueryValue.create_with_value ("2000-01-01 10:10:10");
 		Midgard.QueryConstraint cnstr1 = new Midgard.QueryConstraint (prop1, ">", val1, null);
 
-		/* name <> "" */
-		Midgard.QueryProperty prop2 = new Midgard.QueryProperty ("name", null);
-		Midgard.QueryValue val2 = new Midgard.QueryValue ("");
-		Midgard.QueryConstraint cnstr2 = new Midgard.QueryConstraint (prop2, "<>", val2, null);
+		/* firstname <> "" */
+		Midgard.QueryProperty prop2 = new Midgard.QueryProperty ("firstname", null);
+		Midgard.QueryValue val2 = Midgard.QueryValue.create_with_value ("");
+		Midgard.QueryConstraint cnstr2 = new Midgard.QueryConstraint (prop2, "!=", val2, null);
 
-		/* up <> 0 */
-		Midgard.QueryProperty prop3 = new Midgard.QueryProperty ("up", null);
-		Midgard.QueryValue val3 = new Midgard.QueryValue (0);
-		Midgard.QueryConstraint cnstr3 = new Midgard.QueryConstraint (prop3, "<>", val3, null);
-
-		/* Implicit join on storage which is configured for a class, a style property is link to */
-		Midgard.QueryProperty prop4 = new Midgard.QueryProperty ("style.metadata.revised", null);
-		Midgard.QueryValue val4 = new Midgard.QueryValue ("2000-01-01 10:10:10");
-		Midgard.QueryConstraint cnstr4 = new Midgard.QueryConstraint (prop4, ">", val4, null);
+		/* lastname <> "" */
+		Midgard.QueryProperty prop3 = new Midgard.QueryProperty ("lastname", null);
+		Midgard.QueryValue val3 = Midgard.QueryValue.create_with_value ("");
+		Midgard.QueryConstraint cnstr3 = new Midgard.QueryConstraint (prop3, "!=", val3, null);
 
 		/* Implicit join on parameters storage */
 		Midgard.QueryProperty prop5 = new Midgard.QueryProperty ("parameter.name", null);
-		Midgard.QueryValue val5 = new Midgard.QueryValue ("some domain");
+		Midgard.QueryValue val5 = Midgard.QueryValue.create_with_value ("some domain");
 		Midgard.QueryConstraint cnstr5 = new Midgard.QueryConstraint (prop5, "=", val5, null);
 
 		/* Implicit join on attachments storage */
 		Midgard.QueryProperty prop6 = new Midgard.QueryProperty ("attachment.name", null);
-		Midgard.QueryValue val6 = new Midgard.QueryValue ("my attachment");
+		Midgard.QueryValue val6 = Midgard.QueryValue.create_with_value ("my attachment");
 		Midgard.QueryConstraint cnstr6 = new Midgard.QueryConstraint (prop6, "=", val6, null);
 	
 		/* Create two constraints group */
-		Midgard.QueryConstraintGroup group_constraint_and = new Midgard.QueryConstraintGroup ("AND", cnstr4, cnstr5, cnstr6);
+		Midgard.QueryConstraintGroup group_constraint_and = new Midgard.QueryConstraintGroup ();	
+		group_constraint_and.add_constraint (cnstr5);
+		group_constraint_and.add_constraint (cnstr6);
 
-		Midgard.QueryConstraintGroup group_constraint = new Midgard.QueryConstraintGroup ("OR", cnstr1, cnstr2, cnstr3, group_constraint_and);
+		Midgard.QueryConstraintGroup group_constraint = new Midgard.QueryConstraintGroup ();
+		group_constraint.grouptype = "OR";
+		group_constraint.add_constraint (cnstr1);
+		group_constraint.add_constraint (cnstr2);
+		//group_constraint.add_constraint (cnstr3);
+		//group_constraint.add_constraint (group_constraint_and);
 
 		/* Add explicit joins */
 		Midgard.QueryProperty prop7 = new Midgard.QueryProperty ("metadata.creator", null);
@@ -66,14 +70,15 @@ namespace MidgardQueryExample {
 		Midgard.QueryProperty prop8 = new Midgard.QueryProperty ("guid", join_storage);
 
 		Midgard.QueryProperty prop9 = new Midgard.QueryProperty ("metadata.creator", null);
-		Midgard.QueryStorage join_storage1 = new Midgard.QueryStorage ("midgard_page");
+		Midgard.QueryStorage join_storage1 = new Midgard.QueryStorage ("midgard_person");
 		Midgard.QueryProperty prop10 = new Midgard.QueryProperty ("metadata.revisor", join_storage1);
 
-		select.add_join ("LEFT", prop7, prop8);
-		select.add_join ("LEFT", prop9, prop10);
+		//select.add_join ("LEFT", prop7, prop8);
+		//select.add_join ("LEFT", prop9, prop10);
 
 		/* Set constraint */
 		select.set_constraint (group_constraint);
+		//select.set_constraint (cnstr1);
 
 		/* Set limit */
 		select.set_limit (1);
